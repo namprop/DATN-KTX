@@ -20,7 +20,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search', '');
-        $perPage = 8;
+        $perPage = 20;
 
         // Giả sử relationship là số ít (1 user có 1 profile)
         // Sửa: 'parent_students' -> 'parent_student', 'dorm_managers' -> 'dorm_manager'

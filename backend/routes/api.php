@@ -24,6 +24,8 @@ Route::post('login', [AuthController::class, 'login']);
 Route::post('registerstudents', [RegisterStudentsController::class, 'registerStudent']);
 Route::get('parentdashboard', [ParentDashboardController::class, 'index']);
 Route::post('registerparentstudent', [RegisterParentStudentController::class, 'registerParentStudent']);
+Route::get('newspapers', [\App\Http\Controllers\NewspaperController::class, 'index']);
+Route::get('newspapers/{id}', [\App\Http\Controllers\NewspaperController::class, 'show']);
 
 Route::post('/chat', [ChatController::class, 'send']);
 
@@ -70,5 +72,6 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin|staff'])->group(
     Route::resource('parentstudent', \App\Http\Controllers\DashBoard\ParentStudentController::class);
     Route::resource('schoolstudent', \App\Http\Controllers\DashBoard\SchoolStudentController::class);
     Route::resource('utilityprice', \App\Http\Controllers\DashBoard\UtilityPriceController::class);
+    Route::resource('announcement', \App\Http\Controllers\DashBoard\NewPPController::class);
     Route::get('dashboard', [DashboardController::class, 'index']);
 });

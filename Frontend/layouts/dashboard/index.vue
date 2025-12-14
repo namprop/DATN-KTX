@@ -184,7 +184,7 @@ const menuItems = [
   },
   { path: "/admin/schoolstudent", label: "Danh sách học sinh", icon: "fa-solid fa-graduation-cap" },
 
-  // { path: "/admin/newpp", label: "Quản Lý Bài Viết", icon: "fa-solid fa-file-lines" },
+  { path: "/admin/newpp", label: "Quản Lý Bài Viết", icon: "fa-solid fa-file-lines" },
 ];
 
 // 🔹 Hiển thị tên trang hiện tại (Không đổi)

@@ -20,6 +20,8 @@
             :to="`/news/${newsList[0].id}`"
             class="lg:col-span-2 bg-gradient-to-br from-white to-slate-50 rounded-2xl overflow-hidden border-2 border-cyan-200 shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
           >
+
+          
             <div class="relative">
               <img
                 class="w-full h-64 md:h-80 object-cover"
@@ -63,7 +65,11 @@
               <div>
                 <p
                   class="text-sm font-semibold"
-                  :class="news.category === 'SỰ KIỆN' ? 'text-blue-600' : 'text-cyan-600'"
+                  :class="
+                    news.category === 'SỰ KIỆN'
+                      ? 'text-blue-600'
+                      : 'text-cyan-600'
+                  "
                 >
                   {{ news.category }}
                 </p>
@@ -80,11 +86,31 @@
           <nav
             class="inline-flex bg-white rounded-full shadow-md overflow-hidden border-2 border-cyan-200"
           >
-            <a href="#" class="px-3 py-2 text-slate-500 hover:bg-cyan-100 transition">‹</a>
-            <a href="#" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold">1</a>
-            <a href="#" class="px-4 py-2 text-slate-600 hover:bg-cyan-100 transition">2</a>
-            <a href="#" class="px-4 py-2 text-slate-600 hover:bg-cyan-100 transition">3</a>
-            <a href="#" class="px-3 py-2 text-slate-500 hover:bg-cyan-100 transition">›</a>
+            <a
+              href="#"
+              class="px-3 py-2 text-slate-500 hover:bg-cyan-100 transition"
+              >‹</a
+            >
+            <a
+              href="#"
+              class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold"
+              >1</a
+            >
+            <a
+              href="#"
+              class="px-4 py-2 text-slate-600 hover:bg-cyan-100 transition"
+              >2</a
+            >
+            <a
+              href="#"
+              class="px-4 py-2 text-slate-600 hover:bg-cyan-100 transition"
+              >3</a
+            >
+            <a
+              href="#"
+              class="px-3 py-2 text-slate-500 hover:bg-cyan-100 transition"
+              >›</a
+            >
           </nav>
         </div>
       </section>
@@ -96,35 +122,71 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from "vue";
+import useAxios from "@/composables/useAxios";
+
 definePageMeta({
   layout: "index",
 });
 
-// Dữ liệu tạm thời, sau này có thể fetch từ API
-const newsList = [
+const api = useAxios();
+
+/**
+ * ✅ DỮ LIỆU CỨNG (ID 1–2–3)
+ */
+const newsList = ref([
   {
     id: 1,
-    title: 'THÔNG BÁO VỀ VIỆC TỔ CHỨC LỄ KỶ NIỆM 60 NĂM THÀNH LẬP TRƯỜNG VÀ ĐÓN NHẬN BẰNG KHEN CỦA BỘ GIÁO DỤC VÀ ĐÀO TẠO',
-    date: 'Ngày 30 tháng 10, 2025',
-    image: '/img/imageblog4.jpg',
-    summary: 'Trường THPT Thanh Oai A được thành lập tháng 9 năm 1965 đến nay vừa tròn 60 năm.....',
-    category: 'THÔNG BÁO',
+    title: "THÔNG BÁO VỀ VIỆC TỔ CHỨC LỄ KỶ NIỆM 60 NĂM THÀNH LẬP TRƯỜNG...",
+    date: "Ngày 30 tháng 10, 2025",
+    image: "/img/imageblog4.jpg",
+    summary: "Trường THPT Thanh Oai A được thành lập tháng 9 năm 1965...",
+    category: "THÔNG BÁO",
   },
   {
     id: 2,
-    title: "HỘI THẢO TRAO ĐỔI KINH NGHIỆM TRIỂN KHAI MỘT SỐ KỸ THUẬT DẠY HỌC PHÁT HUY TÍNH TÍCH CỰC CỦA HỌC SINH THPT",
-    date: 'Ngày 14 tháng 10, 2025',
-    image: 'img/imageblog3.jpg',
-    summary: 'Năm học 2022 - 2023 là năm học đầu tiên triển khai giáo dục phổ thông tổng thể 2018 đối với cấp THPT với mục tiêu là giúp học sinh tiếp tục "phát triển những phẩm chất, năng lực cần thiết". Sáng ngày 16/4/2023 tại...',
-    category: 'Tin Tức',
+    title: "HỘI THẢO TRAO ĐỔI KINH NGHIỆM TRIỂN KHAI...",
+    date: "Ngày 14 tháng 10, 2025",
+    image: "/img/imageblog3.jpg",
+    summary: "Năm học 2022 - 2023 là năm học đầu tiên...",
+    category: "Tin Tức",
   },
   {
     id: 3,
-    title: 'LỄ KHAI GIẢNG NĂM HỌC 2025 – 2026 – TRƯỜNG THPT THANH OAI A 🎉',
-    date: 'Ngày 7 tháng 9, 2025',
-    image: '/img/imageblog5.jpg',
-    summary: 'Sáng 5-9-2025, trong không khí trang nghiêm và rộn ràng, thầy trò THPT Thanh Oai A đã long trọng tổ chức Lễ khai giảng năm học mới 2025 – 2026....',
-    category: 'SỰ KIỆN',
+    title: "LỄ KHAI GIẢNG NĂM HỌC 2025 – 2026 🎉",
+    date: "Ngày 7 tháng 9, 2025",
+    image: "/img/imageblog5.jpg",
+    summary: "Sáng 5-9-2025, trong không khí trang nghiêm...",
+    category: "SỰ KIỆN",
   },
-];
+]);
+
+/**
+ * ✅ FETCH API & NỐI DỮ LIỆU
+ */
+const fetchNews = async () => {
+  try {
+    const res = await api.get("/newspapers");
+
+    if (res.data?.status && res.data.data?.length) {
+      const apiNews = res.data.data.map((item) => ({
+        id: item.id + 3, // ✅ cộng 3 tránh trùng 1–2–3
+        title: item.title,
+        date: new Date(item.created_at).toLocaleDateString("vi-VN"),
+        image: item.image
+          ? `http://localhost:8000/storage/${item.image}`
+          : "/img/imageblog4.jpg",
+        summary: item.content,
+        category: item.type ?? "TIN TỨC",
+      }));
+
+      // ✅ NỐI – KHÔNG GHI ĐÈ
+      newsList.value = [...newsList.value, ...apiNews];
+    }
+  } catch (err) {
+    console.warn("Không load được API, dùng dữ liệu cứng");
+  }
+};
+
+onMounted(fetchNews);
 </script>

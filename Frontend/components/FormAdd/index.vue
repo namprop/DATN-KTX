@@ -11,7 +11,7 @@
         class="bg-white w-full max-w-6xl max-h-[90vh] mx-4 p-6 rounded-lg shadow-lg relative overflow-y-auto"
       >
         <h1 class="text-xl font-semibold mb-4">
-          {{ modelValue?.id ? "Thông Tin Thành Viên" : "Thêm Thành Viên" }}
+          {{ modelValue?.id ? "Thông Tin " : "Thêm " }}
         </h1>
 
         <form

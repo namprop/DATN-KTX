@@ -4,10 +4,26 @@
     class="relative w-full h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center"
     :style="{ backgroundImage: `url(${bgImage})` }"
   >
+    <div
+      v-if="isLoading"
+      class="flex flex-col items-center justify-center min-h-[50vh] text-white"
+    >
+      <i class="fa-solid fa-spinner fa-spin text-5xl"></i>
+      <p class="mt-4 text-lg font-semibold text-slate-700">
+        <!-- Đang tải dữ liệu... -->
+      </p>
+    </div>
+
     <!-- Form đăng nhập/đăng ký -->
     <div
+      v-else
       class="relative z-10 w-full max-w-sm p-6 space-y-5 backdrop-blur-lg rounded-xl shadow-lg text-sm scale-90"
     >
+      <!-- Form đăng nhập/đăng ký
+    <div
+      class="relative z-10 w-full max-w-sm p-6 space-y-5 backdrop-blur-lg rounded-xl shadow-lg text-sm scale-90"
+    > -->
+
       <!-- Form Đăng nhập -->
       <div v-if="isLoginForm" id="login-form">
         <h2 class="text-3xl font-semibold text-center text-white">Đăng Nhập</h2>
@@ -177,6 +193,16 @@ import { useRouter } from "vue-router";
 import useAuth from "@/composables/useAuth";
 import useAxios from "@/composables/useAxios";
 
+const router = useRouter();
+const api = useAxios();
+const { login } = useAuth();
+
+const bgImage = "/img/anh3.webp";
+
+const isLoginForm = ref(true);
+const isLoading = ref(false);
+const error = ref("");
+
 const form = reactive({
   email: "",
   password: "",
@@ -189,26 +215,18 @@ const registerForm = reactive({
   password_confirmation: "",
 });
 
-const error = ref("");
-const router = useRouter();
-const { login, user } = useAuth();
-const api = useAxios();
-
-const bgImage = "/img/anh3.webp";
-const isLoginForm = ref(true);
-const toggleForm = (showLogin) => {
-  isLoginForm.value = showLogin;
-  error.value = ""; // reset lỗi khi chuyển form
-};
-
-// 🧹 Hàm xoá lỗi khi người dùng thao tác lại
-const clearError = () => {
+const toggleForm = (val) => {
+  isLoginForm.value = val;
   error.value = "";
 };
 
-// 🟢 Đăng nhập
+const clearError = () => (error.value = "");
+
+// 🔐 LOGIN
 const handleLogin = async () => {
+  isLoading.value = true;
   error.value = "";
+
   try {
     const res = await login({ form });
 
@@ -217,70 +235,60 @@ const handleLogin = async () => {
       return;
     }
 
-    const userData = res.user;
+    const user = res.user;
 
-    // 🧠 Kiểm tra trạng thái tài khoản
-    if (userData?.status === "Inactive") {
-      alert("Bạn đã được chấp thuận rời KTX. Tài khoản của bạn hiện không còn hoạt động.");
+    if (user.status === "Inactive") {
+      alert("Tài khoản không còn hoạt động");
       return;
     }
 
-    // 🧭 Điều hướng theo vai trò
-    switch (userData?.role) {
+    switch (user.role) {
       case "admin":
       case "staff":
-        await navigateTo("/admin");
+        router.push("/admin");
         break;
       case "student":
-        await navigateTo("/student");
+        router.push("/student");
         break;
       case "parent":
-        await navigateTo("/parent");
+        router.push("/parent");
         break;
       default:
-        await navigateTo("/");
-        break;
+        router.push("/");
     }
-  } catch (err) {
-    error.value =
-      err.response?.data?.message || "Đã có lỗi xảy ra trong quá trình đăng nhập";
+  } catch {
+    error.value = "Lỗi đăng nhập";
+  } finally {
+    isLoading.value = false;
   }
 };
 
-// 🟢 Đăng ký
+// 📝 REGISTER
 const handleRegister = async () => {
-  error.value = "";
-
   if (registerForm.password !== registerForm.password_confirmation) {
-    error.value = "Mật khẩu xác nhận không khớp!";
+    error.value = "Mật khẩu không khớp";
     return;
   }
 
-  const payload = {
-    name: registerForm.name,
-    email: registerForm.email,
-    password: registerForm.password,
-    password_confirmation: registerForm.password_confirmation,
-    role: "Student",
-  };
+  isLoading.value = true;
+  error.value = "";
 
   try {
-    const res = await api.post("/registerstudents", payload);
+    const res = await api.post("/registerstudents", {
+      ...registerForm,
+      role: "Student",
+    });
 
-    if (res.data?.status) {
+    if (res.data.status) {
+      alert("Đăng ký thành công");
       isLoginForm.value = true;
-      error.value = "";
-      registerForm.name = "";
-      registerForm.email = "";
-      registerForm.password = "";
-      registerForm.password_confirmation = "";
-      alert("Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.");
     } else {
-      error.value = res.data?.message || "Đăng ký thất bại";
+      error.value = res.data.message;
     }
-  } catch (err) {
-    error.value =
-      err.response?.data?.message || "Đã có lỗi xảy ra trong quá trình đăng ký";
+  } catch {
+    error.value = "Lỗi đăng ký";
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>

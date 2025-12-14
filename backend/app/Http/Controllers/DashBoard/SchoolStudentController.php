@@ -15,7 +15,7 @@ class SchoolStudentController extends Controller
  public function index(Request $request)
 {
     $search = $request->query('search', '');
-    $perPage = 8;
+    $perPage = 30;
 
     $query = SchoolStudent::query();
 

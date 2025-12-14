@@ -1,21 +1,33 @@
-<<template>
+<
+<template>
   <div class="bg-white rounded-xl shadow-sm overflow-hidden">
     <KTXAddAndSearch
       @search="handleSearch"
       @openForm="openAddForm"
-      title="Danh Sách Người Dùng"
-      titleAdd="Thêm Người Dùng"
-      placeholderSearch="Tìm kiếm Người Dùng..."
+      title="Danh Sách Bài Viết"
+      titleAdd="Thêm Bài Viết"
+      placeholderSearch="Tìm kiếm Bài Viết..."
     />
 
-    <FormAdd
+    <!-- <FormAdd
       :fields="AccountInformationfields"
       :show="openForm"
-      :title="isEdit ? 'Cập nhật thông tin Người Dùng' : 'Thêm người dùng mới'"
-      v-model="createNewParentStudent"
+      :title="isEdit ? 'Cập nhật thông tin Bài Viết' : 'Thêm Bài Viết mới'"
+      v-model="createNewAnnouncement"
       :mess="formErrors"
       @close="openForm = false"
-      @submit="handleSubmitParentStudent"
+      @submit="handleSubmitAnnouncement"
+    /> -->
+
+    <!-- Form thêm/sửa -->
+    <FormAddAndEdit
+      :fields="AccountInformationfields"
+      :show="openForm"
+      :title="isEdit ? 'Cập nhật bài viết' : 'Thêm bài viết mới'"
+      v-model="createNewAnnouncement"
+      :mess="formErrors"
+      @close="openForm = false"
+      @submit="handleSubmitAnnouncement"
     />
 
     <!-- 🔄 Loading Skeleton -->
@@ -32,7 +44,7 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr
-            v-for="(item, index) in dataParentStudent"
+            v-for="(item, index) in dataAnnouncement"
             :key="item.id"
             class="hover:bg-gray-50 transition"
           >
@@ -41,45 +53,38 @@
             >
               {{ index + 1 }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center">
-                <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-gradient-to-r"
-                  :class="getRandomColor()"
-                >
-                  {{ getInitials(item.full_name) }}
-                </div>
-                <div class="ml-3">
-                  <p class="text-sm font-medium text-gray-900">
-                    {{ item.full_name }}
-                  </p>
-                  <p class="text-sm text-gray-500">{{ item.user?.email }}</p>
-                </div>
-              </div>
-            </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {{ item.student.full_name ?? "Chưa điền thông tin" }}
+              {{ item.title ?? "Chưa điền thông tin" }}
             </td>
+            <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ item.content ?? "Chưa điền thông tin" }}
+            </td> -->
+
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {{ item.phone ?? "Chưa Điền SĐT" }}
+              {{ truncateWords(item.content, 5) }}
             </td>
+
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {{ item.address ?? "Chưa Điền Thông Tin" }}
+              {{ item.type ?? "Chưa điền thông tin" }}
+            </td>
+            <td class="px-6 py-2">
+              <img
+                v-if="item.image"
+                :src="`http://localhost:8000/storage/${item.image}`"
+                alt="Hình Ảnh Bài Viết"
+                class="w-20 h-12 object-cover rounded"
+              />
+              <span v-else class="text-gray-400 italic">Chưa có ảnh</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <!-- <button
-                class="text-cyan-600 hover:text-cyan-900 mr-3 cursor-pointer"
-              >
-                Xem
-              </button> -->
               <button
-                @click="handleEditParentStudent(item)"
+                @click="handleEditAnnouncement(item)"
                 class="text-blue-600 hover:text-blue-900 mr-3 cursor-pointer"
               >
                 Sửa
               </button>
               <button
-                @click.prevent="handleDeleteParentStudent(item.id)"
+                @click.prevent="handleDeleteAnnouncement(item.id)"
                 class="text-red-600 hover:text-red-900 cursor-pointer"
               >
                 Xóa
@@ -102,30 +107,30 @@
 
 <script setup>
 definePageMeta({ middleware: "auth", layout: "dashboard" });
-import { ref, onMounted, toRaw } from "vue";
+import { ref, onMounted, toRaw, computed } from "vue";
 import useAxios from "@/composables/useAxios";
 
 const api = useAxios();
-const dataParentStudent = ref({});
+const dataAnnouncement = ref({});
 const pagination = ref({});
 const formErrors = ref({});
 const searchKeyword = ref("");
 const isLoading = ref(false);
 
-const createNewParentStudent = ref({});
+const createNewAnnouncement = ref({});
 const openForm = ref(false);
 const isEdit = ref(false);
 
-const fetchParentStudent = async (keyword = "", page = 1) => {
+const fetchAnnouncement = async (keyword = "", page = 1) => {
   isLoading.value = true; // Bắt đầu loading
   try {
-    const response = await api.get("/admin/parentstudent", {
+    const response = await api.get("/admin/announcement", {
       params: {
         search: keyword,
         page,
       },
     });
-    dataParentStudent.value = response.data.data;
+    dataAnnouncement.value = response.data.data;
     pagination.value = response.data.pagination;
   } catch (error) {
     if (error.response && error.response.status === 422) {
@@ -138,47 +143,78 @@ const fetchParentStudent = async (keyword = "", page = 1) => {
   }
 };
 onMounted(() => {
-  fetchParentStudent();
+  fetchAnnouncement();
 });
+
+const truncateWords = (text, limit = 5) => {
+  if (!text) return "Chưa điền thông tin";
+
+  const words = text.trim().split(/\s+/);
+
+  if (words.length <= limit) {
+    return text;
+  }
+
+  return words.slice(0, limit).join(" ") + "...";
+};
 
 const openAddForm = () => {
   isEdit.value = false;
   openForm.value = true;
   formErrors.value = {};
-  createNewParentStudent.value = {}; // reset form
+  createNewAnnouncement.value = {}; // reset form
 };
 
-const handleEditParentStudent = (parentStudent) => {
+const handleEditAnnouncement = (announcement) => {
   isEdit.value = true;
   openForm.value = true;
   formErrors.value = {};
 
-  createNewParentStudent.value = {
-    id: parentStudent.id,
-    full_name: parentStudent.full_name,
-    phone: parentStudent.phone,
-    address: parentStudent.address,
-    student_code: parentStudent.student.student_code,
-    gender: parentStudent.gender,
+  createNewAnnouncement.value = {
+    id: announcement.id,
+    title: announcement.title,
+    content: announcement.content,
+    type: announcement.type,
+    image: announcement.image
+      ? `http://localhost:8000/storage/${announcement.image}`
+      : null,
   };
 };
 
-const handleSubmitParentStudent = async (datas) => {
+const handleSubmitAnnouncement = async (datas) => {
   const data = toRaw(datas);
   formErrors.value = {};
 
+  const formData = new FormData();
+  formData.append("title", data.title || "");
+  formData.append("type", data.type || "");
+  formData.append("content", data.content || "");
+
+  // 👇 QUAN TRỌNG
+  if (data.image instanceof File) {
+    formData.append("image", data.image);
+  }
+
   try {
     if (isEdit.value) {
-      await api.put(`/admin/parentstudent/${data.id}`, data);
-      alert("Cập nhật người dùng thành công!");
+      formData.append("_method", "PUT");
+
+      await api.post(`/admin/announcement/${data.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("Cập nhật Bài Viết thành công!");
     } else {
-      await api.post("/admin/parentstudent", data);
-      alert("Thêm người dùng thành công!");
+      await api.post("/admin/announcement", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("Thêm Bài Viết thành công!");
     }
 
     openForm.value = false;
-    createNewParentStudent.value = {};
-    await fetchParentStudent(searchKeyword.value);
+    createNewAnnouncement.value = {};
+    await fetchAnnouncement(searchKeyword.value);
   } catch (error) {
     if (error.response?.status === 422) {
       formErrors.value = error.response.data.errors;
@@ -188,37 +224,18 @@ const handleSubmitParentStudent = async (datas) => {
   }
 };
 
-const handleDeleteParentStudent = async (id) => {
-  const confirmed = confirm("Bạn có chắc muốn xóa người dùng này không?");
-  if (!confirmed) return; // nếu người dùng bấm Cancel thì dừng lại
+const handleDeleteAnnouncement = async (id) => {
+  const confirmed = confirm("Bạn có chắc muốn xóa Bài Viết này không?");
+  if (!confirmed) return; // nếu Bài Viết bấm Cancel thì dừng lại
 
   try {
-    await api.delete(`/admin/parentstudent/${id}`);
-    await fetchParentStudent(); // gọi lại danh sách sau khi xóa
-    alert("Xóa người dùng thành công");
+    await api.delete(`/admin/announcement/${id}`);
+    await fetchAnnouncement(); // gọi lại danh sách sau khi xóa
+    alert("Xóa Bài Viết thành công");
   } catch (error) {
-    console.error("Lỗi khi xóa người dùng:", error);
-    alert("Đã xảy ra lỗi khi xóa người dùng!");
+    console.error("Lỗi khi xóa Bài Viết:", error);
+    alert("Đã xảy ra lỗi khi xóa Bài Viết!");
   }
-};
-
-const getInitials = (name) => {
-  if (!name) return "??";
-  const words = name.trim().split(" ");
-  const lastTwo = words.slice(-2).map((w) => w[0].toUpperCase());
-  return lastTwo.join("");
-};
-
-const getRandomColor = () => {
-  const colors = [
-    "from-cyan-400 to-blue-500",
-    "from-pink-400 to-rose-500",
-    "from-emerald-400 to-green-500",
-    "from-indigo-400 to-purple-500",
-    "from-amber-400 to-orange-500",
-    "from-sky-400 to-teal-500",
-  ];
-  return colors[Math.floor(Math.random() * colors.length)];
 };
 
 let debounceTimer = null; // tạo timer debounce
@@ -228,114 +245,61 @@ const handleSearch = (keyword) => {
 
   if (debounceTimer) clearTimeout(debounceTimer); // hủy timer cũ
   debounceTimer = setTimeout(() => {
-    fetchUsers(searchKeyword.value);
+    fetchAnnouncement(searchKeyword.value);
   }, 500); // chỉ gọi API sau 500ms dừng gõ
 };
 
 const handlePageChange = (page) => {
-  fetchParentStudent(searchKeyword.value, page);
+  fetchAnnouncement(searchKeyword.value, page);
 };
 
 const titleTable = [
   "STT",
-  "Họ và Tên Phụ Huynh",
-  "Họ và Tên Học Sinh",
-  "Số Điện Thoại",
-  "Địa Chỉ",
+  "Tiêu Đề Bài Viết",
+  "Nội Dung",
+  "Kiểu Bài Viết",
+  // "Người Đăng Bài",
+  "Hình Ảnh",
   "Hành Động",
 ];
 
 const AccountInformationfields = computed(() => {
   const baseFields = {
-    account: {
-      title: "Thông tin tài khoản",
-      icon: "fas fa-user-circle",
-      fields: [
-        {
-          key: "name",
-          label: "Tên đăng nhập",
-          type: "text",
-          placeholder: "Nguyen Van A",
-          icon: "fas fa-user",
-        },
-        {
-          key: "email",
-          label: "Email",
-          type: "email",
-          placeholder: "user@ktx.edu.vn",
-          icon: "fas fa-envelope",
-        },
-        {
-          key: "password",
-          label: "Mật khẩu",
-          type: "password",
-          placeholder: "••••••••",
-          icon: "fas fa-lock",
-        },
-        {
-          key: "password_confirmation",
-          label: "Xác nhận mật khẩu",
-          type: "password",
-          placeholder: "••••••••",
-          icon: "fas fa-lock",
-        },
-      ],
-    },
     personal: {
-      title: "Thông tin cá nhân",
-      icon: "fas fa-id-card",
+      title: isEdit.value ? "Cập nhật bài viết" : "Thêm bài viết mới",
+      icon: "fas fa-newspaper",
       fields: [
         {
-          key: "full_name",
-          label: "Họ và tên",
+          key: "title",
+          label: "Tiêu đề bài viết",
           type: "text",
-          placeholder: "Nguyen Van A",
-          icon: "fas fa-signature",
-        },
-
-        {
-          key: "phone",
-          label: "Số Điện Thoại",
-          type: "text",
-          placeholder: "VD : 098761235",
-          icon: "fas fa-door-open",
+          placeholder: "Nhập tiêu đề bài viết",
+          icon: "fas fa-heading",
         },
         {
-          key: "student_code",
-          label: "Số thẻ học sinh",
+          key: "type",
+          label: "Kiểu bài viết",
           type: "text",
-          placeholder: "VD : 000001",
-          icon: "fas fa-door-open",
+          icon: "fas fa-toggle-on",
+          placeholder: "Nhập kiểu bài viết (ví dụ: tin tức, sự kiện)",
         },
         {
-          key: "gender",
-          label: "Giới tính",
-          type: "select",
-          icon: "fas fa-venus-mars",
-          options: [
-            { value: "", text: "Chọn giới tính" },
-            { value: "Male", text: "Nam" },
-            { value: "Female", text: "Nữ" },
-            { value: "Other", text: "Khác" },
-          ],
+          key: "image",
+          label: "Hình ảnh",
+          type: "file",
+          icon: "fas fa-image",
         },
         {
-          key: "address",
-          label: "Địa chỉ",
-          type: "text",
-          placeholder: "VD : Hà Nội",
-          icon: "fas fa-door-open",
+          key: "content",
+          label: "Nội dung bài viết",
+          type: "textarea",
+          placeholder: "Nhập nội dung bài viết",
+          icon: "fas fa-align-left",
         },
       ],
     },
   };
 
-  // 🔥 Nếu đang edit => chỉ hiển thị phần personal
-  if (isEdit.value) {
-    return [{ personal: baseFields.personal }];
-  }
-
-  // Nếu thêm mới => hiển thị cả 2 phần
   return [baseFields];
 });
 </script>

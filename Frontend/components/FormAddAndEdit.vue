@@ -144,6 +144,24 @@
                         :placeholder="`${field.placeholder}`"
                       ></textarea>
 
+                      <!-- Upload image -->
+                      <div v-else-if="field.type === 'file'" class="space-y-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          @change="onFileChange($event, field.key)"
+                        />
+
+                        <!-- Preview image -->
+                        <img
+                          v-if="modelValue[field.key]"
+                          :src="previewImage(modelValue[field.key])"
+                          class="w-32 h-24 object-cover rounded border"
+                          alt="Preview"
+                        />
+                      </div>
+
                       <p
                         v-if="mess && mess[field.key]"
                         class="text-red-600 text-[12px] mt-1 mx-1"
@@ -200,6 +218,25 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(["close", "submit", "update:modelValue"]);
+
+// xử lý khi chọn file
+const onFileChange = (event, key) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  emit("update:modelValue", {
+    ...props.modelValue,
+    [key]: file,
+  });
+};
+
+// preview ảnh (file hoặc url)
+const previewImage = (fileOrUrl) => {
+  if (fileOrUrl instanceof File) {
+    return URL.createObjectURL(fileOrUrl);
+  }
+  return fileOrUrl; // url từ server
+};
 </script>
 
 <style scoped>
