@@ -2,6 +2,7 @@
 
 namespace App\Service\Room;
 
+use App\Enums\RoomStatus;
 
 use App\Repositories\Room\RoomRepositoryInterface;
 use App\Service\BaseService;
@@ -27,7 +28,7 @@ class RoomService extends BaseService implements RoomServiceInterface
 
        public function updateRoomStatus($room, $studentCount)
     {
-        if ($room->status === 'Maintenance') {
+        if ($room->status === RoomStatus::Maintenance) {
             return;
         }
         $desiredStatus = 'Available';
@@ -41,7 +42,7 @@ class RoomService extends BaseService implements RoomServiceInterface
             $desiredStatus = 'Available';
         }
 
-        if ($room->status !== $desiredStatus) {
+        if ($room->status->value !== $desiredStatus) {
             $room->update(['status' => $desiredStatus]);
         }
     }

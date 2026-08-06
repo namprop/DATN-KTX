@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
@@ -18,6 +19,7 @@ class Payment extends Model
         'water_usage',
         'total_amount',
         'payment_status',
+        'vnp_transaction_no',
         'payment_date',
         'description',
         'month',
@@ -33,5 +35,13 @@ class Payment extends Model
     public function student()
     {
         return $this->belongsTo(Student::class, 'student_id', 'id');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'payment_status' => PaymentStatus::class,
+            'payment_date' => 'datetime',
+        ];
     }
 }

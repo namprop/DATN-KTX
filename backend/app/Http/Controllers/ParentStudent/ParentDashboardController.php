@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ParentStudent;
 
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Mail\ConfirmRefund;
 use Illuminate\Http\Request;
@@ -63,10 +64,10 @@ class ParentDashboardController extends Controller
                 'description'  => $payment->description,
                 'total_amount' => $payment->total_amount, // Số tiền gốc
                 'total_amount_formatted' => number_format($payment->total_amount, 0, ',', '.') . 'đ',
-                'status'       => $payment->payment_status,
+                'status'       => $payment->payment_status->value,
                 'created_at'   => $payment->created_at->format('d/m/Y H:i'),
                 // ⭐ Cho phép thanh toán nếu chưa thanh toán
-                'can_pay'      => $payment->payment_status === 'Chưa thanh toán',
+                'can_pay'      => $payment->payment_status === PaymentStatus::Unpaid,
             ];
         });
 
@@ -120,7 +121,7 @@ class ParentDashboardController extends Controller
             ->where('student_id', $student->id)
             ->first();
 
-        if (!$payment || $payment->payment_status !== 'refund_pending') {
+        if (!$payment || $payment->payment_status !== PaymentStatus::RefundPending) {
             return response()->json([
                 'status' => false,
                 'message' => 'Không tìm thấy hóa đơn đang hoàn tiền hợp lệ'
@@ -129,41 +130,42 @@ class ParentDashboardController extends Controller
 
         DB::beginTransaction();
         try {
-            // ✅ Cập nhật trạng thái hóa đơn
-            $payment->update(['payment_status' => 'refunded']);
+            $payment = Payment::where('payment_id', $payment_id)
+                ->where('student_id', $student->id)
+                ->lockForUpdate()
+                ->first();
 
-            // ✅ GỬI MAIL CHO PHỤ HUYNH TRƯỚC KHI XÓA DỮ LIỆU
-            // Tìm lại tài khoản phụ huynh (User model)
-            $parentUser = User::where('id', $parent->user_id)->first();
+            if (!$payment || $payment->payment_status !== PaymentStatus::RefundPending) {
+                DB::rollBack();
 
-            if ($parentUser instanceof User && $parentUser->email) {
-                try {
-                    Mail::to($parentUser->email)->send(new ConfirmRefund($parentUser, $payment));
-                } catch (\Exception $mailEx) {
-                    Log::error('❌ Gửi mail hoàn tiền thất bại: ' . $mailEx->getMessage());
-                }
-            } else {
-                Log::warning('⚠️ Không tìm thấy user hợp lệ để gửi mail hoàn tiền. parent_id: ' . $parent->id);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Phiếu hoàn tiền đã được xử lý hoặc không còn hợp lệ.',
+                ], 409);
             }
 
-            // ✅ Xóa dữ liệu liên quan sau khi gửi mail
-            Payment::where('student_id', $student->id)->delete();
-            \App\Models\Contract::where('student_id', $student->id)->delete();
-            $student->delete();
-            $parent->delete();
-
-            if ($student->user_id) {
-                \App\Models\User::where('id', $student->user_id)->delete();
-            }
-
-            // ✅ Xóa luôn tài khoản phụ huynh đang đăng nhập
-            \App\Models\User::where('id', $user->id)->delete();
+            $payment->update([
+                'payment_status' => 'refunded',
+                'payment_date' => now(),
+            ]);
 
             DB::commit();
 
+            $parentUser = User::find($parent->user_id);
+            if ($parentUser && $parentUser->email) {
+                try {
+                    Mail::to($parentUser->email)->send(new ConfirmRefund($parentUser, $payment));
+                } catch (\Throwable $mailEx) {
+                    Log::error('Gửi mail xác nhận hoàn tiền thất bại.', [
+                        'payment_id' => $payment->payment_id,
+                        'error' => $mailEx->getMessage(),
+                    ]);
+                }
+            }
+
             return response()->json([
                 'status' => true,
-                'message' => 'Hoàn trả thành công. Dữ liệu học sinh & phụ huynh đã được xóa, và mail đã được gửi.'
+                'message' => 'Đã xác nhận hoàn tiền. Lịch sử sinh viên, hợp đồng và hóa đơn được giữ lại.'
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

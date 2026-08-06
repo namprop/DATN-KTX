@@ -30,9 +30,9 @@
       <div
         class="bg-green-500 text-white p-3 rounded-t-xl flex justify-between items-center"
       >
-        <span>Trợ lý phụ huynh</span>
+        <span>Trợ lý ký túc xá</span>
         <button @click="toggleChat" class="text-white text-lg font-bold">
-          ✕
+          ×
         </button>
       </div>
 
@@ -61,7 +61,7 @@
         <input
           v-model="input"
           type="text"
-          placeholder="Nhập tin nhắn..."
+          placeholder="Nhập câu hỏi..."
           class="flex-1 p-2 outline-none"
         />
         <button
@@ -82,9 +82,10 @@ import { ref } from "vue";
 const isOpen = ref(false);
 const input = ref("");
 const messages = ref([
-  { sender: "bot", text: "Xin chào! Tôi là trợ lý hỗ trợ phụ huynh." },
+  { sender: "bot", text: "Xin chào! Tôi là trợ lý hỗ trợ thông tin ký túc xá." },
 ]);
 const loading = ref(false);
+const config = useRuntimeConfig();
 
 function toggleChat() {
   isOpen.value = !isOpen.value;
@@ -102,22 +103,38 @@ async function sendMessage() {
 
   try {
     // Gửi request đến Laravel API
-    const res = await fetch("http://localhost:8000/api/chat", {
+    const res = await fetch(`${config.public.apiBase}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(localStorage.getItem("auth-token") && {
+          Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
+        }),
       },
       body: JSON.stringify({ message: userMessage }),
     });
 
     const data = await res.json();
 
-    // ✅ Hiển thị phản hồi thật từ backend (OpenAI)
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error("Bạn cần đăng nhập tài khoản Admin để dùng trợ lý hệ thống.");
+      }
+
+      if (res.status === 403) {
+        throw new Error("Trợ lý hệ thống hiện chỉ dành cho tài khoản Admin.");
+      }
+
+      throw new Error(data.message || "Dịch vụ AI chưa sẵn sàng");
+    }
+
+    // Hiển thị phản hồi thật từ Gemini thông qua backend
     messages.value.push({ sender: "bot", text: data.reply || "..." });
   } catch (error) {
     messages.value.push({
       sender: "bot",
-      text: "⚠️ Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.",
+      text: error.message || "Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.",
     });
   } finally {
     loading.value = false;

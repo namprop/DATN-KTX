@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\DashBoard;
 
+use App\Enums\DepartureRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\DepartureRequest;
 use App\Models\Payment;
 use App\Models\Student;
+use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class DepartureRequestController extends Controller
 {
@@ -60,7 +63,7 @@ class DepartureRequestController extends Controller
             "student_code"  => "required|exists:students,student_code",
             'reason'        => 'required|string|max:1000',
             'request_date'  => 'required|date_format:d/m/Y',
-            'status'        => 'nullable|in:Pending,Approved,Rejected',
+            'status'        => ['nullable', Rule::enum(DepartureRequestStatus::class)],
         ], [
             'student_code.required'   => 'Mã học sinh không được để trống',
             'student_code.exists'     => 'Học sinh không tồn tại',
@@ -225,7 +228,10 @@ class DepartureRequestController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:Approved,Rejected',
+            'status' => ['required', Rule::enum(DepartureRequestStatus::class)->only([
+                DepartureRequestStatus::Approved,
+                DepartureRequestStatus::Rejected,
+            ])],
         ], [
             'status.required' => 'Trạng thái không được để trống',
             'status.in' => 'Trạng thái không hợp lệ',
@@ -246,11 +252,21 @@ class DepartureRequestController extends Controller
             ], 404);
         }
 
+        if ($departureRequest->status !== DepartureRequestStatus::Pending) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Đơn này đã được xử lý trước đó.',
+            ], 409);
+        }
+
         DB::beginTransaction();
 
         try {
             // ✅ Cập nhật trạng thái đơn xin nghỉ
-            $departureRequest->update(['status' => $request->status]);
+            $departureRequest->update([
+                'status' => $request->status,
+                'approved_at' => $request->status === 'Approved' ? now() : null,
+            ]);
 
             // ✅ Nếu đơn được duyệt
             if ($request->status === 'Approved') {
@@ -301,10 +317,18 @@ class DepartureRequestController extends Controller
                     ->update(['status' => 'Terminated']);
 
                 // ✅ Giải phóng phòng và cập nhật trạng thái học sinh
+                $previousRoomId = $student->room_id;
+
                 $student->update([
                     'room_id' => null,
                     'status' => 'Inactive',
                 ]);
+
+                if ($previousRoomId) {
+                    Room::whereKey($previousRoomId)
+                        ->where('status', 'Full')
+                        ->update(['status' => 'Available']);
+                }
 
                 // ✅ Cập nhật trạng thái tài khoản user của học sinh
                 if ($student->user) {

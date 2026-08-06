@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Model;
 
 class Room extends Model
@@ -26,5 +27,10 @@ class Room extends Model
 
     public function payments(){
         return $this->hasMany(Payment::class, 'room_id', 'id');
+    }
+
+    protected function casts(): array
+    {
+        return ['status' => RoomStatus::class];
     }
 }

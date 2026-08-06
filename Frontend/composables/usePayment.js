@@ -1,11 +1,12 @@
-import axios from "axios"
+import useAxios from "@/composables/useAxios"
 
 export const usePayment = () => {
-  const createVNPayPayment = async (amount, description) => {
+  const api = useAxios()
+
+  const createVNPayPayment = async (paymentId) => {
     try {
-      const res = await axios.post("http://localhost:8000/api/vnpay/create", {
-        amount,
-        description,
+      const res = await api.post("/vnpay/create", {
+        payment_id: paymentId,
       })
       if (res.data.payment_url) {
         window.location.href = res.data.payment_url

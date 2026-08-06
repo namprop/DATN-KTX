@@ -1697,6 +1697,109 @@ class DatabaseSeeder extends Seeder
 
 
 
+        // ===== ANNOUNCEMENTS =====
+        $adminId = DB::table('users')
+            ->where('email', 'admin@gmail.com')
+            ->value('id');
+
+        $announcements = [
+            [
+                'title' => 'Thông báo lịch đăng ký phòng ký túc xá năm học 2026 - 2027',
+                'content' => "Ban Quản lý ký túc xá thông báo mở đăng ký phòng cho năm học 2026 - 2027. Sinh viên cần hoàn thiện thông tin cá nhân, kiểm tra tình trạng hồ sơ và lựa chọn phòng phù hợp trên hệ thống.\n\nThời gian đăng ký bắt đầu từ ngày 15/08/2026. Số lượng phòng có hạn, sinh viên nên hoàn tất đăng ký đúng thời gian quy định.\n\nMọi thắc mắc vui lòng liên hệ Ban Quản lý ký túc xá để được hỗ trợ.",
+                'image' => 'uploads/announcements/imageblog4.jpg',
+                'status' => 'Active',
+                'type' => 'notice',
+            ],
+            [
+                'title' => 'Ngày hội chào đón tân sinh viên tại ký túc xá',
+                'content' => "Nhằm giúp tân sinh viên nhanh chóng làm quen với môi trường sinh hoạt mới, Ban Quản lý ký túc xá tổ chức ngày hội chào đón tân sinh viên.\n\nChương trình bao gồm hướng dẫn nội quy, giới thiệu các khu phòng ở, hoạt động giao lưu và giải đáp những vấn đề thường gặp trong quá trình lưu trú.\n\nCác bạn sinh viên hãy tham gia đầy đủ để có một khởi đầu thuận lợi và nhiều trải nghiệm đáng nhớ tại ký túc xá.",
+                'image' => 'uploads/announcements/imageblog5.jpg',
+                'status' => 'Active',
+                'type' => 'event',
+            ],
+            [
+                'title' => 'Hướng dẫn sử dụng điện nước an toàn và tiết kiệm',
+                'content' => "Ban Quản lý ký túc xá khuyến khích sinh viên sử dụng điện nước an toàn, tiết kiệm và có trách nhiệm. Hãy tắt các thiết bị điện khi rời phòng, khóa vòi nước sau khi sử dụng và báo ngay khi phát hiện thiết bị hư hỏng.\n\nViệc sử dụng hợp lý không chỉ giúp giảm chi phí sinh hoạt mà còn góp phần xây dựng môi trường ký túc xá xanh, sạch và bền vững.",
+                'image' => 'uploads/announcements/imageblog3.jpg',
+                'status' => 'Active',
+                'type' => 'news',
+            ],
+            [
+                'title' => 'Ký túc xá tổ chức chương trình giao lưu văn nghệ sinh viên',
+                'content' => "Ban Quản lý ký túc xá tổ chức chương trình giao lưu văn nghệ dành cho toàn thể sinh viên đang lưu trú. Đây là dịp để các bạn gặp gỡ, thể hiện năng khiếu và tăng cường tinh thần đoàn kết giữa các khu phòng.\n\nSinh viên có thể đăng ký các tiết mục hát, múa, nhảy hiện đại hoặc biểu diễn nhạc cụ tại văn phòng Ban Quản lý. Những tiết mục nổi bật sẽ được lựa chọn biểu diễn trong đêm giao lưu chính thức.\n\nBan tổ chức khuyến khích các phòng cùng xây dựng tiết mục tập thể để tạo nên một chương trình vui tươi và đáng nhớ.",
+                'image' => 'uploads/announcements/imageblog1.jpg',
+                'status' => 'Active',
+                'type' => 'event',
+            ],
+            [
+                'title' => 'Ngày hội thể thao sinh viên ký túc xá năm 2026',
+                'content' => "Ngày hội thể thao sinh viên ký túc xá năm 2026 sẽ diễn ra với nhiều nội dung như bóng đá, cầu lông, kéo co và chạy tiếp sức. Chương trình nhằm khuyến khích sinh viên rèn luyện sức khỏe và xây dựng đời sống tập thể tích cực.\n\nMỗi khu phòng có thể đăng ký đội thi theo hướng dẫn của Ban Quản lý. Lịch thi đấu chi tiết sẽ được công bố sau khi kết thúc thời gian đăng ký.\n\nCác bạn sinh viên hãy tham gia và cổ vũ nhiệt tình để ngày hội diễn ra thành công.",
+                'image' => 'uploads/announcements/imageblog2.jpg',
+                'status' => 'Active',
+                'type' => 'event',
+            ],
+            [
+                'title' => 'Chương trình tổng vệ sinh khuôn viên ký túc xá',
+                'content' => "Ban Quản lý phát động chương trình tổng vệ sinh khuôn viên ký túc xá với sự tham gia của sinh viên tại tất cả các khu phòng. Hoạt động tập trung vào vệ sinh hành lang, khu sinh hoạt chung và chăm sóc cây xanh.\n\nMỗi phòng chủ động chuẩn bị dụng cụ cần thiết và thực hiện đúng khu vực được phân công. Rác thải cần được phân loại và đưa đến điểm tập kết theo quy định.\n\nHoạt động góp phần xây dựng môi trường sống xanh, sạch, đẹp và nâng cao ý thức cộng đồng.",
+                'image' => 'uploads/announcements/anh1.webp',
+                'status' => 'Active',
+                'type' => 'event',
+            ],
+            [
+                'title' => 'Thông báo lịch kiểm tra cơ sở vật chất các phòng ở',
+                'content' => "Ban Quản lý ký túc xá sẽ tiến hành kiểm tra định kỳ cơ sở vật chất tại các phòng ở. Nội dung kiểm tra gồm hệ thống điện, nước, giường, tủ, cửa và các thiết bị được bàn giao.\n\nSinh viên vui lòng sắp xếp thời gian có mặt, vệ sinh phòng và tổng hợp trước các thiết bị đang hư hỏng để cán bộ phụ trách ghi nhận.\n\nCác trường hợp tự ý thay đổi hoặc làm hư hỏng tài sản sẽ được xử lý theo nội quy ký túc xá.",
+                'image' => 'uploads/announcements/anh2.webp',
+                'status' => 'Active',
+                'type' => 'notice',
+            ],
+            [
+                'title' => 'Thông báo bảo trì hệ thống điện khu nhà ở sinh viên',
+                'content' => "Để bảo đảm hệ thống điện vận hành an toàn, ký túc xá sẽ tạm ngừng cung cấp điện tại một số khu nhà trong thời gian bảo trì. Sinh viên cần tắt thiết bị điện và rút các thiết bị quan trọng khỏi nguồn trước thời gian mất điện.\n\nBan Quản lý sẽ phối hợp với đơn vị kỹ thuật để hoàn thành công việc trong thời gian sớm nhất.\n\nLịch bảo trì chi tiết tại từng khu sẽ được niêm yết tại bảng thông báo.",
+                'image' => 'uploads/announcements/anh3.webp',
+                'status' => 'Active',
+                'type' => 'notice',
+            ],
+            [
+                'title' => 'Thông báo thực hiện nội quy giờ đóng mở cổng ký túc xá',
+                'content' => "Ban Quản lý đề nghị toàn thể sinh viên nghiêm túc thực hiện quy định về giờ đóng mở cổng ký túc xá. Sinh viên về muộn cần xuất trình thẻ, đăng ký với bảo vệ và nêu rõ lý do.\n\nKhông cho người lạ tự ý vào khu phòng ở và không sử dụng thẻ sinh viên của người khác. Khi phát hiện tình huống bất thường, sinh viên cần báo ngay cho bảo vệ hoặc cán bộ trực.\n\nViệc tuân thủ nội quy góp phần bảo đảm an ninh và an toàn chung cho toàn ký túc xá.",
+                'image' => 'uploads/announcements/Banner.jpg',
+                'status' => 'Active',
+                'type' => 'notice',
+            ],
+            [
+                'title' => 'Kinh nghiệm sắp xếp phòng ở gọn gàng cho sinh viên',
+                'content' => "Không gian phòng ở sẽ thoải mái hơn khi đồ dùng được sắp xếp khoa học. Sinh viên nên phân chia khu vực học tập, nghỉ ngơi và lưu trữ cá nhân rõ ràng; đồng thời hạn chế để vật dụng tại lối đi chung.\n\nMỗi phòng nên xây dựng lịch vệ sinh, kiểm tra thiết bị điện trước khi ra ngoài và duy trì không gian thông thoáng.\n\nNhững thói quen nhỏ này giúp cải thiện chất lượng sinh hoạt và hạn chế các nguy cơ mất an toàn.",
+                'image' => 'uploads/announcements/123.png',
+                'status' => 'Active',
+                'type' => 'news',
+            ],
+            [
+                'title' => 'Các kênh hỗ trợ sinh viên đang lưu trú tại ký túc xá',
+                'content' => "Sinh viên có thể liên hệ Ban Quản lý khi cần hỗ trợ về phòng ở, hợp đồng, hóa đơn hoặc cơ sở vật chất. Các phản ánh cần cung cấp rõ mã sinh viên, số phòng và nội dung cần xử lý.\n\nĐối với sự cố khẩn cấp liên quan đến điện, nước hoặc an ninh, sinh viên nên báo trực tiếp cho cán bộ trực hoặc bảo vệ.\n\nThông tin đầy đủ giúp bộ phận phụ trách tiếp nhận và giải quyết yêu cầu nhanh chóng hơn.",
+                'image' => 'uploads/announcements/Untitled.png',
+                'status' => 'Active',
+                'type' => 'news',
+            ],
+            [
+                'title' => 'Xây dựng nếp sống văn minh trong ký túc xá',
+                'content' => "Mỗi sinh viên cần có ý thức giữ gìn vệ sinh chung, hạn chế tiếng ồn, tôn trọng thời gian nghỉ ngơi và tài sản của người cùng phòng. Những bất đồng trong sinh hoạt nên được trao đổi trên tinh thần hợp tác.\n\nBan tự quản các tầng sẽ phối hợp với Ban Quản lý để ghi nhận ý kiến và tổ chức các hoạt động xây dựng môi trường sống tích cực.\n\nNếp sống văn minh là nền tảng để ký túc xá trở thành ngôi nhà chung an toàn và thân thiện.",
+                'image' => 'uploads/announcements/logo.png',
+                'status' => 'Active',
+                'type' => 'news',
+            ],
+        ];
+
+        foreach ($announcements as $announcement) {
+            DB::table('announcements')->updateOrInsert(
+                ['title' => $announcement['title']],
+                array_merge($announcement, [
+                    'user_id' => $adminId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])
+            );
+        }
+
         // DB::table('school_students')->insert([
         //     ['student_code' => '000001', 'full_name' => 'Nguyễn Văn An'],
         //     ['student_code' => '000002', 'full_name' => 'Trần Thị Bích Ngọc'],

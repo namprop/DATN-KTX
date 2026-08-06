@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\DashBoard;
 
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Mail\PaymentCreated;
 use App\Models\ParentStudent;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 
 class PaymentController extends Controller
@@ -233,7 +235,7 @@ class PaymentController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'payment_status' => 'required|in:paid,unpaid',
+            'payment_status' => ['required', Rule::enum(PaymentStatus::class)],
         ], [
             'payment_status.required' => 'Trạng thái thanh toán không được để trống',
             'payment_status.in' => 'Trạng thái thanh toán không hợp lệ',

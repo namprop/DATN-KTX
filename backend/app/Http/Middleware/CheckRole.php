@@ -24,16 +24,22 @@ class CheckRole
             ], 401);
         }
 
-        if (
-            ($role === 'admin' && Auth::user()->role !== Constant::ROLE_ADMIN)
-            || ($role === 'staff' && Auth::user()->role !== Constant::ROLE_STAFF)
-            || ($role === 'student' && Auth::user()->role !== Constant::ROLE_STUDENT)
-            || ($role === 'parentstudent' && Auth::user()->role !== Constant::ROLE_PARENT)
+        $roleMap = [
+            'admin' => Constant::ROLE_ADMIN,
+            'staff' => Constant::ROLE_STAFF,
+            'student' => Constant::ROLE_STUDENT,
+            'parent' => Constant::ROLE_PARENT,
+            'parentstudent' => Constant::ROLE_PARENT,
+        ];
+        $allowedRoles = collect(explode('|', $role))
+            ->map(fn (string $item) => $roleMap[strtolower(trim($item))] ?? null)
+            ->filter()
+            ->all();
 
-        ) {
+        if (!in_array(Auth::user()->role, $allowedRoles, true)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Forbideen',
+                'message' => 'Forbidden',
             ], 403);
         }
 

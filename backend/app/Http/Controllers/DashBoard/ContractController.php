@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\DashBoard;
 
+use App\Enums\ContractStatus;
 use App\Http\Controllers\Controller;
 use App\Service\Contract\ContractServiceInterface;
 use App\Service\User\UserServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ContractController extends Controller
 {
@@ -71,7 +73,7 @@ class ContractController extends Controller
 
                 'start_date' => 'required|date|date_format:Y-m-d',
                 'end_date'   => 'required|date|after:start_date|date_format:Y-m-d',
-                'status' => 'nullable|in:Pending,Approved,Active,Completed,Terminated,Rejected',
+                'status' => ['nullable', Rule::enum(ContractStatus::class)],
                 'student_code' => 'required|exists:students,student_code|unique:contracts,student_id,NULL,id,student_id,(select id from students where student_code = ' . ($input['student_code'] ?? '') . ')',
             ],
             [
@@ -157,7 +159,7 @@ class ContractController extends Controller
             [
                 'start_date' => 'required|date|date_format:Y-m-d',
                 'end_date'   => 'required|date|after:start_date|date_format:Y-m-d',
-                'status' => 'nullable|in:Pending,Approved,Active,Completed,Terminated,Rejected',
+                'status' => ['nullable', Rule::enum(ContractStatus::class)],
             ],
             [
                 'start_date.required' => 'Ngày bắt đầu không được để trống',

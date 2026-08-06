@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\DashBoard;
 
+use App\Enums\RoomStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Service\Room\RoomServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class RoomController extends Controller
 {
@@ -50,7 +52,7 @@ class RoomController extends Controller
         foreach ($rooms as $room) {
             $newStatus = $room->status;
 
-            if ($room->status !== 'Maintenance') { // không tự đổi nếu đang bảo trì
+            if ($room->status !== RoomStatus::Maintenance) { // không tự đổi nếu đang bảo trì
                 if ($room->students_count >= $room->capacity) {
                     $newStatus = 'Full';
                 } elseif ($room->students_count == 0) {
@@ -100,7 +102,7 @@ class RoomController extends Controller
             [
                 'room_code' => 'required|string|max:255|unique:rooms,room_code',
                 'capacity' => 'required|integer|min:1',
-                'status' => 'nullable|in:Available,Full,Maintenance',
+                'status' => ['nullable', Rule::enum(RoomStatus::class)],
                 'description' => 'nullable|string|max:255',
                 'price' => 'nullable|string|max:255',
             ],
@@ -176,7 +178,7 @@ class RoomController extends Controller
             [
                 'room_code' => 'required|string|max:255|unique:rooms,room_code,' . $id,
                 'capacity' => 'required|integer|min:1',
-                'status' => 'nullable|in:Available,Full,Maintenance',
+                'status' => ['nullable', Rule::enum(RoomStatus::class)],
                 'description' => 'nullable|string|max:255',
                 'price' => 'nullable|string|max:255',
 

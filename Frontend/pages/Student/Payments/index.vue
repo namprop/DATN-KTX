@@ -144,7 +144,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import useAxios from "@/composables/useAxios";
-import axios from "axios";
 
 const api = useAxios();
 const payments = ref([]);
@@ -179,7 +178,7 @@ const payNow = async () => {
     const paymentId = selectedPayment.value.payment_id;
 
     // Gọi API backend để tạo link thanh toán
-    const res = await axios.post("http://localhost:8000/api/vnpay/create", {
+    const res = await api.post("/vnpay/create", {
       payment_id: paymentId,
     });
 

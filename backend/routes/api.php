@@ -12,7 +12,6 @@ use App\Http\Controllers\Student\RegisterStudentsController;
 use App\Http\Controllers\Student\StudentVerifyController;
 use App\Http\Controllers\Student\SubmitOnboardingFormController;
 use App\Http\Controllers\VnpayController;
-use App\Http\Controllers\VnpayTest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,14 +21,14 @@ use Illuminate\Support\Facades\Route;
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('registerstudents', [RegisterStudentsController::class, 'registerStudent']);
-Route::get('parentdashboard', [ParentDashboardController::class, 'index']);
 Route::post('registerparentstudent', [RegisterParentStudentController::class, 'registerParentStudent']);
 Route::get('newspapers', [\App\Http\Controllers\NewspaperController::class, 'index']);
 Route::get('newspapers/{id}', [\App\Http\Controllers\NewspaperController::class, 'show']);
 
-Route::post('/chat', [ChatController::class, 'send']);
+Route::middleware(['auth:sanctum', 'role:admin', 'throttle:10,1'])
+    ->post('/chat', [ChatController::class, 'send']);
 
-Route::post('/vnpay/create', [VnpayController::class, 'createPayment']);
+Route::middleware('auth:sanctum')->post('/vnpay/create', [VnpayController::class, 'createPayment']);
 Route::get('/vnpay/return', [VnpayController::class, 'vnpReturn']);
 
 Route::prefix('student')->middleware(['auth:sanctum', 'role:student'])->group(function () {
@@ -72,6 +71,6 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin|staff'])->group(
     Route::resource('parentstudent', \App\Http\Controllers\DashBoard\ParentStudentController::class);
     Route::resource('schoolstudent', \App\Http\Controllers\DashBoard\SchoolStudentController::class);
     Route::resource('utilityprice', \App\Http\Controllers\DashBoard\UtilityPriceController::class);
-    Route::resource('announcement', \App\Http\Controllers\DashBoard\NewPPController::class);
+    Route::apiResource('announcement', \App\Http\Controllers\DashBoard\NewPPController::class);
     Route::get('dashboard', [DashboardController::class, 'index']);
 });

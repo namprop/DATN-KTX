@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ContractStatus;
 use Illuminate\Database\Eloquent\Model;
 
 class Contract extends Model
@@ -17,5 +18,10 @@ class Contract extends Model
 
     public function student(){
         return $this->belongsTo(Student::class, 'student_id', 'id');
+    }
+
+    protected function casts(): array
+    {
+        return ['status' => ContractStatus::class];
     }
 }

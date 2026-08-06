@@ -4,212 +4,150 @@ namespace App\Http\Controllers\DashBoard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcements;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth as FacadesAuth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class NewPPController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
+    private const TYPES = ['news', 'event', 'notice'];
+
+    public function index(Request $request): JsonResponse
     {
-        $perPage = 20;
-
-        $announcements = Announcements::orderBy('created_at', 'desc')
-            ->paginate($perPage);
-
-        return response()->json([
-            "status" => true,
-            "message" => "Lấy danh sách bản tin thành công",
-            "data" => $announcements->items(),
-            "pagination" => [
-                "total" => $announcements->total(),
-                "per_page" => $announcements->perPage(),
-                "current_page" => $announcements->currentPage(),
-                "last_page" => $announcements->lastPage(),
-            ]
-        ], 200);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validator = Validator::make(
-            $request->all(),
-            [
-                // 'user_id' => 'nullable|exists:users,id|unique:announcements,user_id',
-                'title'   => 'required|string|max:255',
-                'content' => 'required|string',
-                'image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-                'status'  => 'nullable|in:Active,Inactive',
-                'type'    => 'nullable|string',
-            ],
-            [
-                'title.required' => 'Tiêu đề không được để trống',
-                'content.required' => 'Nội dung không được để trống',
-                'image.image' => 'File phải là hình ảnh',
-                'image.mimes' => 'Ảnh phải là jpg, jpeg, png, webp',
-                // 'image.max'   => 'Ảnh tối đa 2MB',
-            ]
-        );
-
-        if ($validator->fails()) {
-            return response()->json([
-                "status" => false,
-                "message" => "Dữ liệu không hợp lệ",
-                "errors" => $validator->errors()
-            ], 422);
-        }
-
-        // ✅ xử lý upload ảnh
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('uploads/announcements', 'public');
-        }
-
-        $announcement = Announcements::create([
-            'user_id' => Auth::id(),
-            'title'   => $request->title,
-            'content' => $request->content,
-            'image'   => $imagePath, // lưu path
-            'status'  => $request->status ?? 'Active',
-            'type'    => $request->type,
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::in(['Active', 'Inactive'])],
+            'type' => ['nullable', Rule::in(self::TYPES)],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
+        $announcements = Announcements::query()
+            ->with('user:id,name')
+            ->when($validated['search'] ?? null, function ($query, string $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%");
+                });
+            })
+            ->when($validated['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($validated['type'] ?? null, fn ($query, $type) => $query->where('type', $type))
+            ->latest()
+            ->paginate($validated['per_page'] ?? 20);
+
         return response()->json([
-            "status" => true,
-            "message" => "Thêm bản tin thành công",
-            "data" => $announcement
+            'status' => true,
+            'message' => 'Lấy danh sách bài viết thành công.',
+            'data' => collect($announcements->items())->map(fn ($item) => $this->present($item)),
+            'pagination' => [
+                'total' => $announcements->total(),
+                'per_page' => $announcements->perPage(),
+                'current_page' => $announcements->currentPage(),
+                'last_page' => $announcements->lastPage(),
+            ],
+        ]);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate($this->rules());
+        $validated['user_id'] = $request->user()->id;
+        $validated['status'] ??= 'Active';
+        $validated['type'] ??= 'news';
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('uploads/announcements', 'public');
+        }
+
+        $announcement = Announcements::create($validated)->load('user:id,name');
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Thêm bài viết thành công.',
+            'data' => $this->present($announcement),
         ], 201);
     }
 
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(string $id): JsonResponse
     {
-        //
-    }
+        $announcement = Announcements::with('user:id,name')->findOrFail($id);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $announcement = Announcements::find($id);
-
-        if (!$announcement) {
-            return response()->json([
-                "status" => false,
-                "message" => "Bản tin không tồn tại"
-            ], 404);
-        }
-
-        // ✅ validate
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'title'   => 'required|string|max:255',
-                'content' => 'required|string',
-                'image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-                'status'  => 'nullable|in:Active,Inactive',
-                'type'    => 'nullable|string',
-            ],
-            [
-                'title.required' => 'Tiêu đề không được để trống',
-                'content.required' => 'Nội dung không được để trống',
-                'image.image' => 'File phải là hình ảnh',
-                'image.mimes' => 'Ảnh phải là jpg, jpeg, png, webp',
-            ]
-        );
-
-        if ($validator->fails()) {
-            return response()->json([
-                "status" => false,
-                "message" => "Dữ liệu không hợp lệ",
-                "errors" => $validator->errors()
-            ], 422);
-        }
-
-        // ✅ xử lý ảnh mới (nếu có)
-        $imagePath = $announcement->image;
-
-        if ($request->hasFile('image')) {
-
-            // xóa ảnh cũ
-            if ($imagePath && Storage::disk('public')->exists($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
-            }
-
-            // upload ảnh mới
-            $imagePath = $request->file('image')
-                ->store('uploads/announcements', 'public');
-        }
-
-        // ✅ update dữ liệu
-        $announcement->update([
-            'title'   => $request->title,
-            'content' => $request->content,
-            'image'   => $imagePath,
-            'status'  => $request->status ?? $announcement->status,
-            'type'    => $request->type,
-            'user_id' => Auth::id(), // người sửa
+        return response()->json([
+            'status' => true,
+            'data' => $this->present($announcement),
         ]);
-
-        return response()->json([
-            "status" => true,
-            "message" => "Cập nhật bản tin thành công",
-            "data" => $announcement
-        ], 200);
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function update(Request $request, string $id): JsonResponse
     {
-        //
-        $announcement = Announcements::find($id);
+        $announcement = Announcements::findOrFail($id);
+        $validated = $request->validate($this->rules(true));
+        $oldImage = $announcement->image;
 
-        if (!$announcement) {
-            return response()->json([
-                "status" => false,
-                "message" => "Bản tin không tồn tại"
-            ], 404);
+        if ($request->boolean('remove_image')) {
+            $validated['image'] = null;
+        } elseif ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('uploads/announcements', 'public');
         }
 
-        if (Storage::disk('public')->exists($announcement->image)) {
-            Storage::disk('public')->delete($announcement->image);
+        unset($validated['remove_image']);
+        $validated['user_id'] = $request->user()->id;
+        $announcement->update($validated);
+
+        if ($oldImage && $oldImage !== $announcement->image) {
+            Storage::disk('public')->delete($oldImage);
         }
 
-        $announcement->delete();
         return response()->json([
-            "status" => true,
-            "message" => "Xóa bản tin thành công"
-        ], 200);
+            'status' => true,
+            'message' => 'Cập nhật bài viết thành công.',
+            'data' => $this->present($announcement->load('user:id,name')),
+        ]);
+    }
+
+    public function destroy(string $id): JsonResponse
+    {
+        $announcement = Announcements::findOrFail($id);
+        $image = $announcement->image;
+        $announcement->delete();
+
+        if ($image) {
+            Storage::disk('public')->delete($image);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Xóa bài viết thành công.',
+        ]);
+    }
+
+    private function rules(bool $updating = false): array
+    {
+        $presence = $updating ? 'sometimes' : 'required';
+
+        return [
+            'title' => [$presence, 'string', 'max:255'],
+            'content' => [$presence, 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_image' => ['nullable', 'boolean'],
+            'status' => ['nullable', Rule::in(['Active', 'Inactive'])],
+            'type' => ['nullable', Rule::in(self::TYPES)],
+        ];
+    }
+
+    private function present(Announcements $announcement): array
+    {
+        return [
+            'id' => $announcement->id,
+            'title' => $announcement->title,
+            'content' => $announcement->content,
+            'image' => $announcement->image,
+            'image_url' => $announcement->image ? url(Storage::url($announcement->image)) : null,
+            'status' => $announcement->status,
+            'type' => $announcement->type,
+            'author' => $announcement->user?->name,
+            'created_at' => $announcement->created_at,
+            'updated_at' => $announcement->updated_at,
+        ];
     }
 }

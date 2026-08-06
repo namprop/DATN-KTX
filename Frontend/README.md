@@ -1,75 +1,30 @@
-# Nuxt Minimal Starter
+# DATN-KTX Frontend
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Giao diện Nuxt 3/Vue 3 cho hệ thống quản lý ký túc xá.
 
-## Setup
+## Cấu hình
 
-Make sure to install dependencies:
+Tạo `.env` nếu backend không dùng địa chỉ mặc định:
+
+```dotenv
+NUXT_PUBLIC_API_BASE=http://localhost:8000/api
+NUXT_PUBLIC_STORAGE_BASE=http://localhost:8000/storage
+```
+
+## Chạy local
 
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+Ứng dụng chạy tại `http://localhost:4000`.
 
-Build the application for production:
+## Kiểm tra bản production
 
 ```bash
-# npm
 npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
 npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Chi tiết kiến trúc, ERD và luồng nghiệp vụ nằm trong [README dự án](../README.md).
